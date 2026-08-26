@@ -74,7 +74,9 @@ export function AnexosPage() {
     } catch (err: any) {
       console.error("Error al cargar anexos:", err);
       setError(
-        "No se pudo conectar con el servidor backend para obtener los anexos. Verifique que el servicio backend en localhost:8000 esté corriendo.",
+        "No se pudo conectar con el servidor backend para obtener los anexos. Verifique que el servicio backend en la URL: " +
+          import.meta.env.VITE_API_URL +
+          " esté corriendo.",
       );
     } finally {
       setLoading(false);
