@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  frontend:
+    container_name: cesfam-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+    ports:
+      # Mapeo opcional de puertos por si deseas acceder directamente desde el host
+      - "8080:80"
+    restart: always
+    networks:
+      - cesfam
+
+networks:
+  cesfam:
+    external: true
+# NOTA: Si vas a correr esto de forma local y no tienes la red 'cesfam' creada,
+# puedes crearla previamente con el comando: docker network create cesfam
