@@ -20,8 +20,11 @@ jobs:
     steps:
       - name: Actualizar código
         working-directory: ${{ env.APP_DIR }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          git -c http.extraheader="AUTHORIZATION: bearer ${{ github.token }}" fetch origin main
+          AUTH=$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w 0)
+          git -c "http.extraheader=AUTHORIZATION: basic $AUTH" fetch origin main
           git reset --hard origin/main
 
       - name: Verificar Docker
