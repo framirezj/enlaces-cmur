@@ -1,57 +1,45 @@
-name: Deploy to GitHub Pages
+name: Deploy Frontend
 
 on:
-  workflow_dispatch: # Permite ejecutar el flujo manualmente desde GitHub
   push:
-    branches: ["main"] # o 'master'
+    branches:
+      - main
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
+    env:
+      APP_DIR: /opt/docker/cesfam-enlaces/frontend
+      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Actualizar código
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          git -c http.extraheader="AUTHORIZATION: bearer ${{ github.token }}" fetch origin main
+          git reset --hard origin/main
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9 # O la versión que uses localmente (ej: 9, 8, etc.)
+      - name: Verificar Docker
+        run: |
+          docker --version
+          docker compose version
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
+      - name: Construir imagen
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          docker compose build
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Levantar aplicación
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          docker compose up -d
 
-      - name: Build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-        run: pnpm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "./dist"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Verificar contenedor
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          docker compose ps
