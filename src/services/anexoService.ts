@@ -15,8 +15,8 @@ function normalizeAnexo(item: any): Anexo {
     unidad_servicio: unidadVal,
     unidadServicio: unidadVal,
     funcionarios: item.funcionarios ?? "",
-    creado_por_id: item.creado_por_id ?? null,
-    actualizado_por_id: item.actualizado_por_id ?? null,
+    creado_por_id: item.creado_por_id ?? item.creadoPorId ?? null,
+    actualizado_por_id: item.actualizado_por_id ?? item.actualizadoPorId ?? null,
   };
 }
 
@@ -48,18 +48,52 @@ function getHeaders(token?: string | null): Record<string, string> {
 
 export const anexoService = {
   /**
-   * Obtiene la lista completa de anexos telefónicos (GET /anexos/)
+   * Obtiene la lista de anexos telefónicos paginada y filtrada (GET /anexos/)
    */
-  async getAnexos(): Promise<Anexo[]> {
-    const response = await fetch(`${API_URL}/anexos/`);
+  async getAnexos(params?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    unidadServicio?: string;
+  }): Promise<{
+    items: Anexo[];
+    total: number;
+    page: number;
+    size: number;
+    pages: number;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.size) queryParams.append("size", params.size.toString());
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.unidadServicio && params.unidadServicio !== "TODOS") {
+      queryParams.append("unidadServicio", params.unidadServicio);
+    }
+
+    const response = await fetch(`${API_URL}/anexos/?${queryParams.toString()}`);
     if (!response.ok) {
       throw new Error(`Error al obtener anexos (${response.status})`);
     }
     const data = await response.json();
-    if (!Array.isArray(data)) {
-      return [];
+    
+    if (data && typeof data === "object" && "items" in data && Array.isArray(data.items)) {
+      return {
+        items: data.items.map(normalizeAnexo),
+        total: data.total ?? 0,
+        page: data.page ?? 1,
+        size: data.size ?? 20,
+        pages: data.pages ?? 1,
+      };
     }
-    return data.map(normalizeAnexo);
+    
+    const items = Array.isArray(data) ? data : [];
+    return {
+      items: items.map(normalizeAnexo),
+      total: items.length,
+      page: 1,
+      size: items.length || 20,
+      pages: 1,
+    };
   },
 
   /**

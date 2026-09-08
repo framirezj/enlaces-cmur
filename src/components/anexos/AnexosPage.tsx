@@ -33,6 +33,10 @@ import {
   AlertCircle,
   RefreshCw,
   Lock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 export function AnexosPage() {
@@ -45,6 +49,26 @@ export function AnexosPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSector, setSelectedSector] = useState<string>("TODOS");
   const [copiedAnexo, setCopiedAnexo] = useState<string | null>(null);
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+
+  // Debounce para la búsqueda en el backend
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1);
+    }, 350);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
   // Estados de Modales
   const [isFormModalOpen, setIsFormModalOpen] = useState<boolean>(false);
@@ -69,8 +93,15 @@ export function AnexosPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await anexoService.getAnexos();
-      setAnexos(data);
+      const response = await anexoService.getAnexos({
+        page: currentPage,
+        size: pageSize,
+        search: debouncedSearchQuery.trim() || undefined,
+        unidadServicio: selectedSector !== "TODOS" ? selectedSector : undefined,
+      });
+      setAnexos(response.items);
+      setTotalItems(response.total);
+      setTotalPages(response.pages);
     } catch (err: any) {
       console.error("Error al cargar anexos:", err);
       setError(
@@ -81,7 +112,7 @@ export function AnexosPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize, debouncedSearchQuery, selectedSector]);
 
   useEffect(() => {
     fetchAnexos();
@@ -121,68 +152,73 @@ export function AnexosPage() {
   const handleFormSubmit = async (formData: AnexoInput) => {
     if (!isAuthenticated) return;
 
-    if (anexoToEdit) {
-      // Editar
-      const updated = await anexoService.updateAnexo(
-        anexoToEdit.id,
-        formData,
-        token,
-      );
-      setAnexos((prev) =>
-        prev.map((item) => (item.id === anexoToEdit.id ? updated : item)),
-      );
-      showToast(`Anexo N° ${formData.anexo} actualizado correctamente.`);
-    } else {
-      // Crear
-      const created = await anexoService.createAnexo(formData, token);
-      setAnexos((prev) => [created, ...prev]);
-      showToast(`Anexo N° ${formData.anexo} creado con éxito.`);
+    try {
+      if (anexoToEdit) {
+        // Editar
+        await anexoService.updateAnexo(
+          anexoToEdit.id,
+          formData,
+          token,
+        );
+        showToast(`Anexo N° ${formData.anexo} actualizado correctamente.`);
+      } else {
+        // Crear
+        await anexoService.createAnexo(formData, token);
+        showToast(`Anexo N° ${formData.anexo} creado con éxito.`);
+      }
+      fetchAnexos();
+    } catch (err: any) {
+      showToast(err.message || "Error al guardar el anexo", "error");
     }
   };
 
   // Confirmar eliminación (con token de autenticación)
   const handleDeleteConfirm = async () => {
     if (!anexoToDelete || !isAuthenticated) return;
-    await anexoService.deleteAnexo(anexoToDelete.id, token);
-    setAnexos((prev) => prev.filter((item) => item.id !== anexoToDelete.id));
-    showToast(`Anexo N° ${anexoToDelete.anexo} eliminado.`, "success");
+    try {
+      await anexoService.deleteAnexo(anexoToDelete.id, token);
+      showToast(`Anexo N° ${anexoToDelete.anexo} eliminado.`, "success");
+      fetchAnexos();
+    } catch (err: any) {
+      showToast(err.message || "Error al eliminar el anexo", "error");
+    }
   };
 
-  // Sectores únicos para filtro
+  // Manejar el cambio de sector/filtro
+  const handleSelectSector = (sec: string) => {
+    setSelectedSector(sec);
+    setCurrentPage(1);
+  };
+
+  // Sectores únicos para filtro (estáticos predefinidos + cualquier otro que aparezca)
   const sectores = useMemo(() => {
-    const list = Array.from(
-      new Set(anexos.map((a) => a.unidadServicio).filter(Boolean)),
-    );
-    return ["TODOS", ...list];
+    const staticSectores = [
+      "TODOS",
+      "SECTOR ROJO",
+      "SECTOR VERDE",
+      "SECTOR AZUL",
+      "SECTOR AMARILLO",
+      "SECTOR TRANSVERSAL",
+      "Sin asignar",
+    ];
+    const currentUnidades = anexos.map((a) => a.unidadServicio).filter(Boolean);
+    const combined = [...staticSectores];
+    for (const unit of currentUnidades) {
+      if (!combined.some((s) => s.toUpperCase() === unit.toUpperCase())) {
+        combined.push(unit);
+      }
+    }
+    return combined;
   }, [anexos]);
-
-  // Lista filtrada
-  const filteredAnexos = useMemo(() => {
-    return [...anexos]
-      .filter((item) => {
-        const matchesSector =
-          selectedSector === "TODOS" ||
-          item.unidadServicio.toUpperCase() === selectedSector.toUpperCase();
-
-        const query = searchQuery.toLowerCase().trim();
-
-        const matchesSearch =
-          !query ||
-          item.anexo.toLowerCase().includes(query) ||
-          item.ubicacion.toLowerCase().includes(query) ||
-          item.unidadServicio.toLowerCase().includes(query) ||
-          item.funcionarios.toLowerCase().includes(query);
-
-        return matchesSector && matchesSearch;
-      })
-      .sort((a, b) => Number(a.anexo) - Number(b.anexo));
-  }, [anexos, selectedSector, searchQuery]);
 
   // Métricas
-  const totalAnexos = anexos.length;
+  const totalAnexos = totalItems;
   const totalSectores = useMemo(() => {
-    return new Set(anexos.map((a) => a.unidadServicio)).size;
-  }, [anexos]);
+    return sectores.filter((s) => s !== "TODOS").length;
+  }, [sectores]);
+
+  const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
 
   const getSectorBadgeVariant = (unidad: string) => {
     const normalized = unidad.toUpperCase();
@@ -327,7 +363,7 @@ export function AnexosPage() {
             {sectores.map((sec) => (
               <button
                 key={sec}
-                onClick={() => setSelectedSector(sec)}
+                onClick={() => handleSelectSector(sec)}
                 className={`px-3 py-1 text-xs rounded-full border transition-all shrink-0 ${
                   selectedSector === sec
                     ? "bg-primary text-primary-foreground border-primary font-medium shadow-xs"
@@ -386,7 +422,7 @@ export function AnexosPage() {
                     </TableCell>
                   </TableRow>
                 ))
-              ) : filteredAnexos.length === 0 ? (
+              ) : anexos.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -396,7 +432,7 @@ export function AnexosPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAnexos.map((item) => (
+                anexos.map((item) => (
                   <TableRow
                     key={item.id}
                     className="hover:bg-muted/30 transition-colors"
@@ -480,6 +516,90 @@ export function AnexosPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Paginación */}
+        {totalItems > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-border bg-muted/20 text-xs text-muted-foreground">
+            <div>
+              Mostrando <span className="font-semibold text-foreground">{startItem}</span> a{" "}
+              <span className="font-semibold text-foreground">{endItem}</span> de{" "}
+              <span className="font-semibold text-foreground">{totalItems}</span> anexos.
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Selector de tamaño de página */}
+              <div className="flex items-center gap-1.5 mr-2">
+                <span>Por página:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="h-8 px-2 rounded-md border border-border bg-background text-foreground text-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  {/* Botón Primera Página */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1 || loading}
+                  >
+                    <ChevronsLeft className="size-4" />
+                  </Button>
+
+                  {/* Botón Anterior */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1 || loading}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+
+                  {/* Páginas numeradas */}
+                  <div className="text-foreground font-semibold px-2">
+                    Pág. {currentPage} de {totalPages}
+                  </div>
+
+                  {/* Botón Siguiente */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages || loading}
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
+
+                  {/* Botón Última Página */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages || loading}
+                  >
+                    <ChevronsRight className="size-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Crear / Editar */}
