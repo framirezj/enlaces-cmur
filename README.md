@@ -1,4 +1,4 @@
-# React + TypeScript + Vite (Base Starter Template)
+# React + TypeScript + Vite (Base Starter Template)#
 
 Esta es una plantilla base estructurada para iniciar nuevos proyectos en React de forma rápida, ordenada y con soporte para componentes de interfaz modernos y enrutamiento dinámico.
 
