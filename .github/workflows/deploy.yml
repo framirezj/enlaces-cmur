@@ -35,7 +35,7 @@ jobs:
       - name: Construir imagen
         working-directory: ${{ env.APP_DIR }}
         run: |
-          docker compose build
+          docker compose build --no-cache
 
       - name: Levantar aplicación
         working-directory: ${{ env.APP_DIR }}
