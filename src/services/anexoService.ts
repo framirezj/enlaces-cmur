@@ -63,8 +63,8 @@ export const anexoService = {
     pages: number;
   }> {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append("page", params.page.toString());
-    if (params?.size) queryParams.append("size", params.size.toString());
+    queryParams.append("page", (params?.page ?? 1).toString());
+    queryParams.append("size", (params?.size ?? 20).toString());
     if (params?.search) queryParams.append("search", params.search);
     if (params?.unidadServicio && params.unidadServicio !== "TODOS") {
       queryParams.append("unidadServicio", params.unidadServicio);
