@@ -234,6 +234,10 @@ export function AnexosPage() {
     if (normalized.includes("TRANSVERSAL")) {
       return "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30 font-semibold";
     }
+    if (normalized.includes("DIRECCION") || normalized.includes("DIRECCIÓN")) {
+      return "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30 font-semibold";
+    }
+
     return "bg-muted text-muted-foreground border-border";
   };
 
