@@ -11,14 +11,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Home,
-  PhoneCall,
-  List,
-  LogOut,
-  ChevronsUpDown,
-  Bot,
-} from "lucide-react";
+import { Home, PhoneCall, List, LogOut, ChevronsUpDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useEffect, useRef } from "react";
