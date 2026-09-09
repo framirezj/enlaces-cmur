@@ -12,7 +12,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <header className="flex h-12 items-center justify-between border-b border-border pb-4 mb-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <span className="font-semibold">Navegación</span>
             </div>
             <TopInfoBar />
           </header>
@@ -22,6 +21,3 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-
-
