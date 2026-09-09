@@ -155,11 +155,7 @@ export function AnexosPage() {
     try {
       if (anexoToEdit) {
         // Editar
-        await anexoService.updateAnexo(
-          anexoToEdit.id,
-          formData,
-          token,
-        );
+        await anexoService.updateAnexo(anexoToEdit.id, formData, token);
         showToast(`Anexo N° ${formData.anexo} actualizado correctamente.`);
       } else {
         // Crear
@@ -199,6 +195,7 @@ export function AnexosPage() {
       "SECTOR AZUL",
       "SECTOR AMARILLO",
       "SECTOR TRANSVERSAL",
+      "DIRECCIÓN",
       "Sin asignar",
     ];
     const currentUnidades = anexos.map((a) => a.unidadServicio).filter(Boolean);
@@ -521,9 +518,14 @@ export function AnexosPage() {
         {totalItems > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-border bg-muted/20 text-xs text-muted-foreground">
             <div>
-              Mostrando <span className="font-semibold text-foreground">{startItem}</span> a{" "}
-              <span className="font-semibold text-foreground">{endItem}</span> de{" "}
-              <span className="font-semibold text-foreground">{totalItems}</span> anexos.
+              Mostrando{" "}
+              <span className="font-semibold text-foreground">{startItem}</span>{" "}
+              a <span className="font-semibold text-foreground">{endItem}</span>{" "}
+              de{" "}
+              <span className="font-semibold text-foreground">
+                {totalItems}
+              </span>{" "}
+              anexos.
             </div>
 
             <div className="flex items-center gap-2">
@@ -563,7 +565,9 @@ export function AnexosPage() {
                     variant="outline"
                     size="icon"
                     className="size-8"
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1 || loading}
                   >
                     <ChevronLeft className="size-4" />
@@ -579,7 +583,9 @@ export function AnexosPage() {
                     variant="outline"
                     size="icon"
                     className="size-8"
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages || loading}
                   >
                     <ChevronRight className="size-4" />
