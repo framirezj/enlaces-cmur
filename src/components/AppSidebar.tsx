@@ -151,18 +151,6 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="RAG Bienestar"
-                  isActive={location.pathname === "/bienestar"}
-                >
-                  <Link to="/bienestar" className="flex items-center gap-3">
-                    <Bot className="size-4 text-indigo-500" />
-                    <span>Bienestar</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
