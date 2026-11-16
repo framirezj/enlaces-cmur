@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { PhoneCall, List, ArrowRight, ShieldCheck } from "lucide-react";
+import { PublicacionesSection } from "@/components/home/PublicacionesSection";
 
 export function InicioPage() {
   return (
@@ -81,6 +82,13 @@ export function InicioPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-border/60" />
+
+      {/* Sección de Publicaciones */}
+      <PublicacionesSection />
     </div>
   );
 }
+

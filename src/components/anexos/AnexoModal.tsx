@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import type { Anexo, AnexoInput } from "@/types/anexo.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, Phone, MapPin, Building2, Users } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2, Phone, MapPin, Building2, Users } from "lucide-react";
 
 interface AnexoModalProps {
   isOpen: boolean;
@@ -53,8 +60,6 @@ export function AnexoModal({
     setError(null);
   }, [anexoToEdit, isOpen]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.anexo.trim()) {
@@ -83,29 +88,20 @@ export function AnexoModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-xl overflow-hidden text-card-foreground">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-md bg-primary/10 text-primary">
               <Phone className="size-4" />
             </div>
-            <h3 className="text-base font-semibold">
+            <DialogTitle className="text-base">
               {anexoToEdit ? "Editar Anexo Telefónico" : "Nuevo Anexo Telefónico"}
-            </h3>
+            </DialogTitle>
           </div>
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 text-xs rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium">
               {error}
@@ -117,6 +113,11 @@ export function AnexoModal({
             <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Phone className="size-3.5 text-muted-foreground" />
               N° Anexo / Extensión *
+              {anexoToEdit && (
+                <span className="ml-1 text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  no editable
+                </span>
+              )}
             </label>
             <Input
               type="text"
@@ -124,6 +125,8 @@ export function AnexoModal({
               value={formData.anexo}
               onChange={(e) => setFormData({ ...formData, anexo: e.target.value })}
               className="text-sm font-mono"
+              readOnly={!!anexoToEdit}
+              disabled={!!anexoToEdit}
               required
             />
           </div>
@@ -154,7 +157,9 @@ export function AnexoModal({
               type="text"
               placeholder="Ej: SECTOR ROJO"
               value={formData.unidadServicio}
-              onChange={(e) => setFormData({ ...formData, unidadServicio: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, unidadServicio: e.target.value })
+              }
               className="text-sm uppercase font-semibold"
               required
             />
@@ -187,14 +192,15 @@ export function AnexoModal({
               type="text"
               placeholder="Ej: Dr. Rojas / Enfermera María"
               value={formData.funcionarios}
-              onChange={(e) => setFormData({ ...formData, funcionarios: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, funcionarios: e.target.value })
+              }
               className="text-sm"
               required
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
+          <DialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
@@ -212,9 +218,9 @@ export function AnexoModal({
               {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
               {anexoToEdit ? "Guardar Cambios" : "Crear Anexo"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
