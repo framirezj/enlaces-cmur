@@ -32,7 +32,6 @@ import {
   Trash2,
   AlertCircle,
   RefreshCw,
-  Lock,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -40,8 +39,8 @@ import {
 } from "lucide-react";
 
 export function AnexosPage() {
-  const { user, token } = useAuth();
-  const isAuthenticated = Boolean(user);
+  const { token, isAdmin } = useAuth();
+  const canManage = isAdmin;
 
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -127,30 +126,30 @@ export function AnexosPage() {
     }, 2000);
   };
 
-  // Abrir modal de creación (Solo si está autenticado)
+  // Abrir modal de creación (Solo administradores)
   const handleOpenCreateModal = () => {
-    if (!isAuthenticated) return;
+    if (!canManage) return;
     setAnexoToEdit(null);
     setIsFormModalOpen(true);
   };
 
-  // Abrir modal de edición (Solo si está autenticado)
+  // Abrir modal de edición (Solo administradores)
   const handleOpenEditModal = (anexo: Anexo) => {
-    if (!isAuthenticated) return;
+    if (!canManage) return;
     setAnexoToEdit(anexo);
     setIsFormModalOpen(true);
   };
 
-  // Abrir modal de eliminación (Solo si está autenticado)
+  // Abrir modal de eliminación (Solo administradores)
   const handleOpenDeleteModal = (anexo: Anexo) => {
-    if (!isAuthenticated) return;
+    if (!canManage) return;
     setAnexoToDelete(anexo);
     setIsDeleteModalOpen(true);
   };
 
-  // Guardar (Crear o Editar con token de autenticación)
+  // Guardar (Crear o Editar con token de administrador)
   const handleFormSubmit = async (formData: AnexoInput) => {
-    if (!isAuthenticated) return;
+    if (!canManage) return;
 
     try {
       if (anexoToEdit) {
@@ -168,9 +167,9 @@ export function AnexosPage() {
     }
   };
 
-  // Confirmar eliminación (con token de autenticación)
+  // Confirmar eliminación (con token de administrador)
   const handleDeleteConfirm = async () => {
-    if (!anexoToDelete || !isAuthenticated) return;
+    if (!anexoToDelete || !canManage) return;
     try {
       await anexoService.deleteAnexo(anexoToDelete.id, token);
       showToast(`Anexo N° ${anexoToDelete.anexo} eliminado.`, "success");
@@ -274,8 +273,8 @@ export function AnexosPage() {
           </div>
         </div>
 
-        {/* Botón Nuevo Anexo: Solo si está autenticado */}
-        {isAuthenticated ? (
+        {/* Botón Nuevo Anexo: Solo Administradores */}
+        {canManage && (
           <Button
             onClick={handleOpenCreateModal}
             className="h-10 gap-2 font-medium text-sm self-start sm:self-auto shadow-sm"
@@ -283,11 +282,6 @@ export function AnexosPage() {
             <Plus className="size-4" />
             Nuevo Anexo
           </Button>
-        ) : (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/40 text-muted-foreground text-xs font-medium self-start sm:self-auto">
-            <Lock className="size-3.5" />
-            <span>Inicie sesión para administrar</span>
-          </div>
         )}
       </div>
 
@@ -337,7 +331,7 @@ export function AnexosPage() {
                 Listado General de Anexos
               </h2>
               <p className="text-xs text-muted-foreground">
-                {isAuthenticated
+                {canManage
                   ? "Consulte, filtre, edite o elimine las extensiones telefónicas de la red."
                   : "Consulte y busque las extensiones telefónicas del CESFAM."}
               </p>
@@ -391,7 +385,7 @@ export function AnexosPage() {
                   Funcionario(s) Asignado(s)
                 </TableHead>
                 <TableHead className="w-[120px] text-right">
-                  {isAuthenticated ? "Acciones" : "Copiar"}
+                  {canManage ? "Acciones" : "Copiar"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -414,7 +408,7 @@ export function AnexosPage() {
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-1">
                       <Skeleton className="h-8 w-8 rounded-md" />
-                      {isAuthenticated && (
+                      {canManage && (
                         <>
                           <Skeleton className="h-8 w-8 rounded-md" />
                           <Skeleton className="h-8 w-8 rounded-md" />
@@ -489,13 +483,13 @@ export function AnexosPage() {
                           )}
                         </button>
 
-                        {/* Editar y Eliminar: Solo para usuarios autenticados */}
-                        {isAuthenticated && (
+                        {/* Editar y Eliminar: Solo para Administradores */}
+                        {canManage && (
                           <>
                             <button
                               onClick={() => handleOpenEditModal(item)}
                               title="Editar Anexo"
-                              className="inline-flex items-center justify-center size-8 rounded-md border border-border bg-background hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                              className="inline-flex items-center justify-center size-8 rounded-md border border-border bg-background hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                             >
                               <Pencil className="size-4" />
                             </button>
@@ -503,7 +497,7 @@ export function AnexosPage() {
                             <button
                               onClick={() => handleOpenDeleteModal(item)}
                               title="Eliminar Anexo"
-                              className="inline-flex items-center justify-center size-8 rounded-md border border-border bg-background hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              className="inline-flex items-center justify-center size-8 rounded-md border border-border bg-background hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                             >
                               <Trash2 className="size-4" />
                             </button>
@@ -612,8 +606,8 @@ export function AnexosPage() {
         )}
       </div>
 
-      {/* Modal Crear / Editar */}
-      {isAuthenticated && (
+      {/* Modal Crear / Editar (Solo Admin) */}
+      {canManage && (
         <AnexoModal
           isOpen={isFormModalOpen}
           onClose={() => setIsFormModalOpen(false)}
@@ -622,8 +616,8 @@ export function AnexosPage() {
         />
       )}
 
-      {/* Modal Eliminar */}
-      {isAuthenticated && (
+      {/* Modal Eliminar (Solo Admin) */}
+      {canManage && (
         <DeleteAnexoModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}

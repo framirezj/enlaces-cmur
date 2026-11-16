@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopInfoBar } from "@/components/TopInfoBar";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </header>
           {children}
         </main>
+        <AuthModal />
       </TooltipProvider>
     </SidebarProvider>
   );

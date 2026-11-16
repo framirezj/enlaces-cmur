@@ -11,11 +11,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, PhoneCall, List, LogOut, ChevronsUpDown } from "lucide-react";
+import { Home, PhoneCall, List, LogOut, LogIn, ChevronsUpDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,59 +28,19 @@ import {
 
 export function AppSidebar() {
   const location = useLocation();
-  const { user, logout, loginWithGoogle, isLoading } = useAuth();
+  const { user, logout, openAuthModal, isLoading, isAdmin } = useAuth();
   const { state, isMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Solo inicializar si no hay un usuario autenticado
-    if (user) return;
-
-    const initializeGoogleSignIn = () => {
-      const g = (window as any).google;
-      if (g && g.accounts && g.accounts.id) {
-        g.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
-          callback: async (response: any) => {
-            try {
-              await loginWithGoogle(response.credential);
-            } catch (err) {
-              console.error("Error al iniciar sesión con Google:", err);
-            }
-          },
-        });
-
-        if (googleButtonRef.current) {
-          g.accounts.id.renderButton(googleButtonRef.current, {
-            type: isCollapsed ? "icon" : "standard",
-            theme: "outline",
-            size: "medium",
-            shape: "pill",
-            logo_alignment: "left",
-          });
-        }
-      }
-    };
-
-    let intervalId: any;
-    const g = (window as any).google;
-    if (g && g.accounts && g.accounts.id) {
-      initializeGoogleSignIn();
-    } else {
-      intervalId = setInterval(() => {
-        const g2 = (window as any).google;
-        if (g2 && g2.accounts && g2.accounts.id) {
-          initializeGoogleSignIn();
-          clearInterval(intervalId);
-        }
-      }, 100);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [user, loginWithGoogle, isCollapsed]);
+  const getInitials = (nombre: string) => {
+    return nombre
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <Sidebar>
@@ -132,6 +93,7 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -150,7 +112,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Footer con estado de Autenticación */}
-      <SidebarFooter className="p-4 border-t border-sidebar-border flex flex-col items-center justify-center">
+      <SidebarFooter className="p-3 border-t border-sidebar-border flex flex-col items-center justify-center">
         {isLoading ? (
           <div className="flex items-center gap-3 px-1 py-1.5 w-full">
             <div className="h-8 w-8 rounded-full bg-sidebar-accent animate-pulse shrink-0" />
@@ -165,43 +127,69 @@ export function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex w-full items-center gap-3 rounded-lg p-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-left focus:outline-hidden transition-colors cursor-pointer">
-                <img
-                  src={user.foto_url}
-                  alt={user.nombre}
-                  className="h-8 w-8 rounded-full object-cover border border-sidebar-border shrink-0"
-                  referrerPolicy="no-referrer"
-                />
+                {user.foto_url ? (
+                  <img
+                    src={user.foto_url}
+                    alt={user.nombre}
+                    className="h-8 w-8 rounded-full object-cover border border-sidebar-border shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary text-xs font-bold border border-primary/25 shrink-0">
+                    {getInitials(user.nombre)}
+                  </div>
+                )}
+
                 {!isCollapsed && (
                   <div className="flex flex-1 flex-col text-sm leading-tight min-w-0">
-                    <span className="font-semibold truncate">
-                      {user.nombre}
-                    </span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {user.email}
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold truncate">
+                        {user.nombre}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground truncate">
+                      {user.rut || user.email}
                     </span>
                   </div>
                 )}
+
                 {!isCollapsed && (
                   <ChevronsUpDown className="size-4 text-muted-foreground shrink-0" />
                 )}
               </button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent
               side={isMobile ? "bottom" : "top"}
               align="end"
               className="w-56"
             >
               <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {user.nombre}
-                  </p>
+                <div className="flex flex-col space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold leading-none truncate">
+                      {user.nombre}
+                    </p>
+                    <Badge
+                      variant={isAdmin ? "default" : "secondary"}
+                      className="text-[10px] h-4 px-1.5"
+                    >
+                      {isAdmin ? "Admin" : "Funcionario"}
+                    </Badge>
+                  </div>
                   <p className="text-xs leading-none text-muted-foreground truncate">
-                    {user.email}
+                    RUT: {user.rut}
                   </p>
+                  {user.email && (
+                    <p className="text-[11px] leading-none text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  )}
                 </div>
               </DropdownMenuLabel>
+
               <DropdownMenuSeparator />
+
               <DropdownMenuItem
                 onClick={logout}
                 className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
@@ -211,10 +199,25 @@ export function AppSidebar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : isCollapsed ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => openAuthModal("login")}
+            className="size-8 rounded-lg cursor-pointer hover:bg-sidebar-accent"
+            title="Iniciar sesión"
+          >
+            <LogIn className="size-4" />
+          </Button>
         ) : (
-          <div className="flex justify-center w-full py-1">
-            <div ref={googleButtonRef} className="min-h-9" />
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => openAuthModal("login")}
+            className="w-full justify-center gap-2 cursor-pointer shadow-xs border-sidebar-border hover:bg-sidebar-accent"
+          >
+            <LogIn className="size-4 text-primary" />
+            <span>Iniciar sesión</span>
+          </Button>
         )}
       </SidebarFooter>
     </Sidebar>

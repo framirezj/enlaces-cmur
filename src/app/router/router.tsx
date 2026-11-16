@@ -4,6 +4,7 @@ import { BienestarPage } from "@/components/bienestar/BienestarPage";
 import { AnexosPage } from "@/components/anexos/AnexosPage";
 import Layout from "../layouts/Layout";
 import { EnlacesPage } from "@/components/enlaces/EnlacesPage";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export const router = createBrowserRouter(
   [
@@ -23,10 +24,6 @@ export const router = createBrowserRouter(
           element: <BienestarPage />,
         },
         {
-          path: "/dashboard",
-          element: <p>Dashboard</p>,
-        },
-        {
           path: "/anexos",
           element: <AnexosPage />,
         },
@@ -37,6 +34,23 @@ export const router = createBrowserRouter(
         {
           path: "/enlaces",
           element: <EnlacesPage />,
+        },
+        // Rutas protegidas exclusivas para Administradores
+        {
+          element: <ProtectedRoute allowedRoles={["admin"]} />,
+          children: [
+            {
+              path: "/dashboard",
+              element: (
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-2">Panel de Administración</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Bienvenido al panel exclusivo para administradores del CESFAM.
+                  </p>
+                </div>
+              ),
+            },
+          ],
         },
       ],
     },
