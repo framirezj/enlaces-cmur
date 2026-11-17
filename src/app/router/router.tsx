@@ -1,5 +1,5 @@
 import { createBrowserRouter, Outlet, Navigate } from "react-router-dom";
-import { InicioPage } from "@/components/home/InicioPage";
+//import { InicioPage } from "@/components/home/InicioPage";
 import { BienestarPage } from "@/components/bienestar/BienestarPage";
 import { AnexosPage } from "@/components/anexos/AnexosPage";
 import Layout from "../layouts/Layout";
