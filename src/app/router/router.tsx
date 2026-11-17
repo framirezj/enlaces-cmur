@@ -17,7 +17,7 @@ export const router = createBrowserRouter(
       children: [
         {
           path: "/",
-          element: <InicioPage />,
+          element: <EnlacesPage />, //<InicioPage />,
         },
         {
           path: "/bienestar",
@@ -43,9 +43,12 @@ export const router = createBrowserRouter(
               path: "/dashboard",
               element: (
                 <div className="p-6">
-                  <h1 className="text-2xl font-bold mb-2">Panel de Administración</h1>
+                  <h1 className="text-2xl font-bold mb-2">
+                    Panel de Administración
+                  </h1>
                   <p className="text-sm text-muted-foreground">
-                    Bienvenido al panel exclusivo para administradores del CESFAM.
+                    Bienvenido al panel exclusivo para administradores del
+                    CESFAM.
                   </p>
                 </div>
               ),

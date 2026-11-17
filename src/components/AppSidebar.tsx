@@ -11,7 +11,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, PhoneCall, List, LogOut, LogIn, ChevronsUpDown } from "lucide-react";
+import {
+  Home,
+  PhoneCall,
+  List,
+  LogOut,
+  LogIn,
+  ChevronsUpDown,
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,7 +75,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menú</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   tooltip="Inicio"
@@ -79,7 +86,7 @@ export function AppSidebar() {
                     <span>Inicio</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
 
               <SidebarMenuItem>
                 <SidebarMenuButton
